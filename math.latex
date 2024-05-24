@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\begin{document}
+
+Given a color in the XY colorspace represented by its chromaticity coordinates \((x, y)\) and a white point \((x_w, y_w)\) (often \((0.333, 0.333)\) for the D65 white point), the desaturated color \((x_d, y_d)\) can be expressed as a linear interpolation between the original color and the white point.
+
+The desaturated coordinates \((x_d, y_d)\) are given by:
+
+\[
+\begin{pmatrix} 
+x_d \\ 
+y_d 
+\end{pmatrix} 
+= \alpha 
+\begin{pmatrix} 
+x \\ 
+y 
+\end{pmatrix} 
++ (1 - \alpha) 
+\begin{pmatrix} 
+x_w \\ 
+y_w 
+\end{pmatrix} 
+\]
+
+where \(\alpha\) is the desaturation factor, ranging from 0 (fully desaturated) to 1 (fully saturated).
+
+In matrix form, this equation can be written as:
+
+\[
+\vec{C_d} = \alpha \vec{C} + (1 - \alpha) \vec{W} 
+\]
+
+where:
+
+\[
+\vec{C_d} = \begin{pmatrix} 
+x_d \\ 
+y_d 
+\end{pmatrix}, \quad 
+\vec{C} = \begin{pmatrix} 
+x \\ 
+y 
+\end{pmatrix}, \quad 
+\vec{W} = \begin{pmatrix} 
+x_w \\ 
+y_w 
+\end{pmatrix} 
+\]
+
+Breaking down the components:
+
+1. \textbf{Original Color Vector}:
+   \[
+   \vec{C} = \begin{pmatrix} x \\ y \end{pmatrix}
+   \]
+
+2. \textbf{White Point Vector}:
+   \[
+   \vec{W} = \begin{pmatrix} x_w \\ y_w \end{pmatrix}
+   \]
+
+3. \textbf{Desaturated Color Vector}:
+   \[
+   \vec{C_d} = \begin{pmatrix} x_d \\ y_d \end{pmatrix}
+   \]
+
+4. \textbf{Desaturation Operation}:
+   \[
+   \vec{C_d} = \alpha \begin{pmatrix} x \\ y \end{pmatrix} + (1 - \alpha) \begin{pmatrix} x_w \\ y_w \end{pmatrix}
+   \]
+
+\end{document}
