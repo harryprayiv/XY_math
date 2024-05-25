@@ -87,7 +87,7 @@ outputs = { self, nixpkgs, flake-utils, haskellNix, iohkNix, CHaP, plutus, style
         legacyPackages = pkgs;
 
         devShell = pkgs.mkShell {
-          name = "xy_calc";
+          name = "xy-math";
           inputsFrom = [hixFlake.devShell];
           buildInputs = [
             (pkgs.haskellPackages.ghcWithPackages (hsPkgs: with hsPkgs; [

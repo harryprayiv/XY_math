@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  name = "xy_calc";
+  name = "xy-math";
 
   # We use the latest supported and cached version
   # from github:input-output-hk/haskell.nix
