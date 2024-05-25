@@ -10,8 +10,8 @@ originalColor = fromList 2 1 [x, y]
 
 -- Define the white point (assumed values for 5000K, need to be determined accurately)
 xw, yw :: Double
-xw = 0.3457 -- Approximate white point values for 5000K
-yw = 0.3585
+xw = 0.34510 -- Approximate white point values for 5000K
+yw = 0.35161
 
 whitePoint :: Matrix Double
 whitePoint = fromList 2 1 [xw, yw]
