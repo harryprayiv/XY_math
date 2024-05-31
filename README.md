@@ -32,7 +32,7 @@ However, chromaCalc gives me the following answer:
 
 Desaturated Color:
 x: 0.493
-y: 0.35949999999999993
+y: 0.359
 
 # Contribute
 Feel free to fork, improve, create pull requests, report bugs, or request new features.
