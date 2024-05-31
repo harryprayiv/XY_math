@@ -29,10 +29,12 @@ x: 0.49125
 y: 0.35949999999999993```
 
 However, chromaCalc gives me the following answer:
-
+```
 Desaturated Color:
 x: 0.493
 y: 0.359
+```
+They're close but not entirely in parity.  It appears that I am using more accurate floating point arithmatic since it is really just a rounding error away from chromaCalc.
 
 # Contribute
 Feel free to fork, improve, create pull requests, report bugs, or request new features.
