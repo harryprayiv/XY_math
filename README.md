@@ -1,6 +1,6 @@
 # A Haskell Module for CIE XYZ Transformations
 
-[![Haskell CI using Nix Flake](https://github.com/harryprayiv/XY_math/actions/workflows/haskell.yml/badge.svg)](https://github.com/cardanonix/pelotero-engine/actions/workflows/haskell.yml)
+[![Haskell CI using Nix Flake](https://github.com/harryprayiv/XY_math/actions/workflows/haskell.yml/badge.svg)](https://github.com/harryprayiv/XY_math/actions/workflows/haskell.yml)
 
 A Haskell-based attempt to replicate X,Y color desaturation from chromaCalc
 
