@@ -1,8 +1,8 @@
 import Data.Matrix (Matrix, fromList, getElem, elementwise, nrows, ncols)
 
--- More accurate function to convert Kelvin temperature to CIE 1931 xy chromaticity coordinates
-kelvinToXY :: Double -> (Double, Double)
-kelvinToXY t
+-- Saunders/McCarthy function to convert Kelvin temperature to CIE 1931 xy chromaticity coordinates
+saundersMcCarthyKelvinToXY :: Double -> (Double, Double)
+saundersMcCarthyKelvinToXY t
     | t >= 4000 && t <= 7000 = (xD, yD)
     | t > 7000 = (xH, yH)
     | otherwise = error "Temperature out of range"
@@ -27,7 +27,7 @@ originalColor = fromList 2 1 [x, y]
 whitePointFromKelvin :: Double -> Matrix Double
 whitePointFromKelvin kelvin = fromList 2 1 [xw, yw]
   where
-    (xw, yw) = kelvinToXY kelvin
+    (xw, yw) = saundersMcCarthyKelvinToXY kelvin
 
 -- Desaturation function
 desaturate :: Double -> Matrix Double -> Matrix Double -> Matrix Double
