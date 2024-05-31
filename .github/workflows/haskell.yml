@@ -1,4 +1,4 @@
-name: Haskell CI with Nix Flake
+name: haskell.nix CI
 
 on:
   workflow_dispatch:
