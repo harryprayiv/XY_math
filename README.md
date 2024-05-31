@@ -1,4 +1,4 @@
-# Dork Manager
+# A Haskell Module for CIE XYZ Transformations
 
 [![Haskell CI using Nix Flake](https://github.com/cardanonix/pelotero-engine/actions/workflows/haskell.yml/badge.svg)](https://github.com/cardanonix/pelotero-engine/actions/workflows/haskell.yml)
 
