@@ -1,55 +1,40 @@
-# Dork Manager
+# A Haskell Module for CIE XYZ Transformations
 
-[![Haskell CI using Nix Flake](https://github.com/cardanonix/pelotero-engine/actions/workflows/haskell.yml/badge.svg)](https://github.com/cardanonix/pelotero-engine/actions/workflows/haskell.yml)
+[![Haskell CI using Nix Flake](https://github.com/harryprayiv/XY_math/actions/workflows/haskell.yml/badge.svg)](https://github.com/cardanonix/pelotero-engine/actions/workflows/haskell.yml)
 
-To reverse engineer a desaturation algorithm in the XY colorspace using matrix math in Haskell, I will need to understand the mathematical principles behind color desaturation and how to represent these operations using matrices. Here's a step-by-step approach to tackle this problem:
+A Haskell-based attempt to replicate X,Y color desaturation from chromaCalc
 
-Step 1: Understand the XY Colorspace
-The XY colorspace typically refers to chromaticity coordinates (x, y) used in the CIE 1931 color space. These coordinates represent color information without considering luminance. Desaturation in this context means reducing the chromaticity while maintaining the hue (tint).
 
-Step 2: Mathematical Representation
-Desaturation can often be achieved by blending the color with a neutral grey or white point. This blending operation can be represented using linear interpolation. Mathematically, if 
-(
-𝑥
-,
-𝑦
-)
-(x,y) is your original color and 
-(
-𝑥
-𝑤
-,
-𝑦
-𝑤
-)
-(x 
-w
-​
- ,y 
-w
-​
- ) is the white point (typically 
-(
-0.333
-,
-0.333
-)
-(0.333,0.333) for D65 white point), the desaturated color 
-(
-𝑥
-𝑑
-,
-𝑦
-𝑑
-)
-(x 
-d
-​
- ,y 
-d
-​
- ) can be represented as:
 
+```Original Color:
+x: 0.54
+y: 0.362
+
+White Point:
+x: 0.345
+y: 0.352
+
+Desaturation Factor (alpha): 0.75
+
+Scaled Original Color:
+x: 0.405
+y: 0.27149999999999996
+
+Scaled White Point:
+x: 8.625e-2
+y: 8.8e-2
+
+Desaturated Color:
+x: 0.49125
+y: 0.35949999999999993```
+
+However, chromaCalc gives me the following answer:
+```
+Desaturated Color:
+x: 0.493
+y: 0.359
+```
+They're close but not entirely in parity.  It appears that I am using more accurate floating point arithmatic since it is really just a rounding error away from chromaCalc.
 
 # Contribute
 Feel free to fork, improve, create pull requests, report bugs, or request new features.
