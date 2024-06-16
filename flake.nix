@@ -117,7 +117,7 @@ outputs = { self, nixpkgs, flake-utils, haskellNix, iohkNix, CHaP, plutus, style
     // {
       # apps = back_EndResults.apps // oci_ImageResult.apps;
       # checks = back_EndResults.checks // oci_ImageResult.checks;
-      packages = back_EndResults.packages;
+      # packages = back_EndResults.packages;
       # legacyPackages = back_EndResults.legacyPackages;
       devShell = back_EndResults.devShell;
     };
