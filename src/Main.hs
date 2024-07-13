@@ -1,8 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 import Data.Matrix (Matrix, fromList, getElem, elementwise, nrows, ncols, transpose, multStd, identity)
-import Linear (V2(..))
-import Linear.V (toVector)
 import Data.List (foldl')
 
 -- Function to perform polynomial regression and predict Y values
@@ -54,7 +52,12 @@ gaussJordan a b
 whitePointSamples :: [(Double, (Double, Double))]
 whitePointSamples = 
     [ (2000, (0.527, 0.413))
+    , (2100, (0.516, 0.415))
+    , (2400, (0.486, 0.415))
+    , (2600, (0.468, 0.412))
+    , (2800, (0.452, 0.408))
     , (3000, (0.437, 0.404))
+    , (3200, (0.423, 0.399))
     , (4000, (0.380, 0.377))
     , (5000, (0.345, 0.352))
     , (6000, (0.322, 0.332))
@@ -84,15 +87,7 @@ getFittedFunctions degree samples = (fittedX, fittedY)
 kelvinToXY :: Double -> (Double, Double)
 kelvinToXY kelvin = (fittedX kelvin, fittedY kelvin)
   where
-    (fittedX, fittedY) = getFittedFunctions 2 whitePointSamples
-
--- Define the original color
-x, y :: Double
-x = 0.54
-y = 0.362
-
-originalColor :: Matrix Double
-originalColor = fromList 2 1 [x, y]
+    (fittedX, fittedY) = getFittedFunctions 5 whitePointSamples  -- Increased degree to 5
 
 -- Function to calculate white point from Kelvin temperature using polynomial regression
 whitePointFromKelvin :: Double -> Matrix Double
@@ -103,10 +98,6 @@ whitePointFromKelvin kelvin = fromList 2 1 [xw, yw]
 -- Desaturation function
 desaturate :: Double -> Matrix Double -> Matrix Double -> Matrix Double
 desaturate alpha color white = customElementwise (+) (scaleMatrix alpha color) (scaleMatrix (1 - alpha) white)
-
--- New function to calculate required light color to achieve target color through diffusion
-colorTarget :: Double -> Matrix Double -> Matrix Double -> Matrix Double
-colorTarget beta target diffusion = customElementwise (/) (customElementwise (-) target (scaleMatrix beta diffusion)) (fromList 2 1 [1 - beta, 1 - beta])
 
 -- Helper function to scale a matrix by a scalar
 scaleMatrix :: Double -> Matrix Double -> Matrix Double
@@ -128,40 +119,23 @@ printMatrix mat = do
 
 main :: IO ()
 main = do
-    let (fittedX, fittedY) = getFittedFunctions 2 whitePointSamples
     let kelvin = 5000 -- Example color temperature
-    let (xw, yw) = (fittedX kelvin, fittedY kelvin)
+    let whitePoint = whitePointFromKelvin kelvin
 
-    let whitePoint = fromList 2 1 [xw, yw]
+    putStrLn $ "White Point for " ++ show kelvin ++ "K:"
+    printMatrix whitePoint
 
-    -- Your existing code to use the white point and perform calculations
-    let alpha = 0.75 -- 25% desaturation
-    let beta = 0.5 -- Example value for the diffusion influence
-
-    -- Define the original color
+    -- Define the original color (for desaturation example)
     let x = 0.54
     let y = 0.362
     let originalColor = fromList 2 1 [x, y]
 
-    -- Define the diffusion color
-    let xd = 0.4
-    let yd = 0.35
-    let diffusionColor = fromList 2 1 [xd, yd]
+    -- Define desaturation factor
+    let alpha = 0.75 -- 25% desaturation
 
-    putStrLn "Original Color:"
+    putStrLn "\nOriginal Color:"
     printMatrix originalColor
-    putStrLn "\nWhite Point:"
-    printMatrix whitePoint
-    putStrLn $ "\nDesaturation Factor (alpha): " ++ show alpha
-    putStrLn $ "\nDiffusion Influence Factor (beta): " ++ show beta
-    putStrLn "\nDiffusion Color:"
-    printMatrix diffusionColor
 
     let desaturatedColor = desaturate alpha originalColor whitePoint
     putStrLn "\nDesaturated Color:"
     printMatrix desaturatedColor
-
-    putStrLn "\nUsing Desaturated Color as Target for Color Transformation"
-    let requiredLightColor = colorTarget beta desaturatedColor diffusionColor
-    putStrLn "\nRequired Light Color to achieve Desaturated Color through Diffusion:"
-    printMatrix requiredLightColor
