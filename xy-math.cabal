@@ -21,6 +21,7 @@ executable desaturateXY
   main-is: Main.hs
   -- other-modules:  Movies, NFO, JSON
   build-depends:  matrix
+                , linear
                 -- , directory
                 -- , conduit-extra
                 -- , free

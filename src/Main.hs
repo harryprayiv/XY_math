@@ -1,19 +1,90 @@
-import Data.Matrix (Matrix, fromList, getElem, elementwise, nrows, ncols)
+{-# LANGUAGE FlexibleContexts #-}
 
--- Saunders/McCarthy function to convert Kelvin temperature to CIE 1931 xy chromaticity coordinates
-saundersMcCarthyKelvinToXY :: Double -> (Double, Double)
-saundersMcCarthyKelvinToXY t
-    | t >= 4000 && t <= 7000 = (xD, yD)
-    | t > 7000 = (xH, yH)
-    | otherwise = error "Temperature out of range"
+import Data.Matrix (Matrix, fromList, getElem, elementwise, nrows, ncols, transpose, multStd, identity)
+import Linear (V2(..))
+import Linear.V (toVector)
+import Data.List (foldl')
+
+-- Function to perform polynomial regression and predict Y values
+polynomialRegression :: Int -> [(Double, Double)] -> (Double -> Double)
+polynomialRegression degree samples = \x -> sum $ zipWith (*) coeffs (map (x **) [0..])
   where
-    -- Constants for t in [4000, 7000]
-    xD = -4.6070e9 / t^3 + 2.9678e6 / t^2 + 0.09911e3 / t + 0.244063
-    yD = -3.000 * xD^2 + 2.870 * xD - 0.275
+    (xs, ys) = unzip samples
+    xs' = map (\x -> [x ** i | i <- [0..fromIntegral degree]]) xs
+    xsMatrix = fromList (length xs) (degree + 1) (concat xs')
+    ysMatrix = fromList (length ys) 1 ys
+    coeffsMatrix = solveNormalEquations xsMatrix ysMatrix
+    coeffs = toListMatrix coeffsMatrix
 
-    -- Constants for t in [7000, 25000]
-    xH = -2.0064e9 / t^3 + 1.9018e6 / t^2 + 0.24748e3 / t + 0.237040
-    yH = -3.000 * xH^2 + 2.870 * xH - 0.275
+-- Helper function to solve the normal equation for polynomial regression
+solveNormalEquations :: Matrix Double -> Matrix Double -> Matrix Double
+solveNormalEquations x y = inv (transpose x `multStd` x) `multStd` transpose x `multStd` y
+
+-- Function to invert a matrix
+inv :: Matrix Double -> Matrix Double
+inv m = case gaussJordan m (identity (nrows m)) of
+          Just invM -> invM
+          Nothing   -> error "Matrix is singular and cannot be inverted"
+
+-- Gauss-Jordan elimination for matrix inversion
+gaussJordan :: Matrix Double -> Matrix Double -> Maybe (Matrix Double)
+gaussJordan a b
+  | nrows a /= ncols a = Nothing
+  | otherwise = go a b 0
+  where
+    n = nrows a
+    go a b i
+      | i >= n = Just b
+      | otherwise = 
+          let pivot = getElem (i+1) (i+1) a
+              a' = scaleRow (1 / pivot) i a
+              b' = scaleRow (1 / pivot) i b
+              rows = [0..n-1]
+              (a'', b'') = foldl' (eliminate i) (a', b') (filter (/= i) rows)
+          in go a'' b'' (i + 1)
+    eliminate i (a, b) j =
+      let factor = getElem (j+1) (i+1) a
+          a' = addRows (-factor) i j a
+          b' = addRows (-factor) i j b
+      in (a', b')
+    scaleRow factor i m = fromList (nrows m) (ncols m) [if r == i then factor * getElem (r+1) (c+1) m else getElem (r+1) (c+1) m | r <- [0..nrows m - 1], c <- [0..ncols m - 1]]
+    addRows factor i j m = fromList (nrows m) (ncols m) [if r == j then getElem (r+1) (c+1) m + factor * getElem (i+1) (c+1) m else getElem (r+1) (c+1) m | r <- [0..nrows m - 1], c <- [0..ncols m - 1]]
+
+-- Sample data for white points and their corresponding XYZ coordinates
+whitePointSamples :: [(Double, (Double, Double))]
+whitePointSamples = 
+    [ (2000, (0.527, 0.413))
+    , (3000, (0.437, 0.404))
+    , (4000, (0.380, 0.377))
+    , (5000, (0.345, 0.352))
+    , (6000, (0.322, 0.332))
+    , (7000, (0.306, 0.316))
+    , (8000, (0.295, 0.305))
+    , (9000, (0.287, 0.295))
+    , (10000, (0.281, 0.288))
+    , (20000, (0.256, 0.258))
+    ]
+
+-- Fit polynomials to the sample data
+fitPolynomials :: Int -> [(Double, (Double, Double))] -> (Double -> Double, Double -> Double)
+fitPolynomials degree samples = (fittedX, fittedY)
+  where
+    (temps, coords) = unzip samples
+    (xs, ys) = unzip coords
+    fittedX = polynomialRegression degree (zip temps xs)
+    fittedY = polynomialRegression degree (zip temps ys)
+
+-- Function to get polynomial functions for XYZ coordinates
+getFittedFunctions :: Int -> [(Double, (Double, Double))] -> (Double -> Double, Double -> Double)
+getFittedFunctions degree samples = (fittedX, fittedY)
+  where
+    (fittedX, fittedY) = fitPolynomials degree samples
+
+-- Function to get XYZ from Kelvin using polynomial regression
+kelvinToXY :: Double -> (Double, Double)
+kelvinToXY kelvin = (fittedX kelvin, fittedY kelvin)
+  where
+    (fittedX, fittedY) = getFittedFunctions 2 whitePointSamples
 
 -- Define the original color
 x, y :: Double
@@ -23,11 +94,11 @@ y = 0.362
 originalColor :: Matrix Double
 originalColor = fromList 2 1 [x, y]
 
--- Function to calculate white point from Kelvin temperature
+-- Function to calculate white point from Kelvin temperature using polynomial regression
 whitePointFromKelvin :: Double -> Matrix Double
 whitePointFromKelvin kelvin = fromList 2 1 [xw, yw]
   where
-    (xw, yw) = saundersMcCarthyKelvinToXY kelvin
+    (xw, yw) = kelvinToXY kelvin
 
 -- Desaturation function
 desaturate :: Double -> Matrix Double -> Matrix Double -> Matrix Double
@@ -39,15 +110,15 @@ colorTarget beta target diffusion = customElementwise (/) (customElementwise (-)
 
 -- Helper function to scale a matrix by a scalar
 scaleMatrix :: Double -> Matrix Double -> Matrix Double
-scaleMatrix scalar matrix = fromList (nrows matrix) (ncols matrix) $ map (* scalar) (toList matrix)
+scaleMatrix scalar matrix = fromList (nrows matrix) (ncols matrix) $ map (* scalar) (toListMatrix matrix)
 
 -- Helper function to convert matrix to list
-toList :: Matrix Double -> [Double]
-toList mat = [ getElem i 1 mat | i <- [1..nrows mat] ]
+toListMatrix :: Matrix Double -> [Double]
+toListMatrix mat = [ getElem i 1 mat | i <- [1..nrows mat] ]
 
 -- Custom elementwise function to avoid conflict
 customElementwise :: (Double -> Double -> Double) -> Matrix Double -> Matrix Double -> Matrix Double
-customElementwise f m1 m2 = fromList (nrows m1) (ncols m1) $ zipWith f (toList m1) (toList m2)
+customElementwise f m1 m2 = fromList (nrows m1) (ncols m1) $ zipWith f (toListMatrix m1) (toListMatrix m2)
 
 -- Helper function to print matrix elements
 printMatrix :: Matrix Double -> IO ()
@@ -55,20 +126,27 @@ printMatrix mat = do
     putStrLn $ "x: " ++ show (getElem 1 1 mat)
     putStrLn $ "y: " ++ show (getElem 2 1 mat)
 
--- Main function with detailed output
 main :: IO ()
 main = do
+    let (fittedX, fittedY) = getFittedFunctions 2 whitePointSamples
+    let kelvin = 5000 -- Example color temperature
+    let (xw, yw) = (fittedX kelvin, fittedY kelvin)
+
+    let whitePoint = fromList 2 1 [xw, yw]
+
+    -- Your existing code to use the white point and perform calculations
     let alpha = 0.75 -- 25% desaturation
     let beta = 0.5 -- Example value for the diffusion influence
+
+    -- Define the original color
+    let x = 0.54
+    let y = 0.362
+    let originalColor = fromList 2 1 [x, y]
 
     -- Define the diffusion color
     let xd = 0.4
     let yd = 0.35
     let diffusionColor = fromList 2 1 [xd, yd]
-
-    -- Calculate the white point from Kelvin temperature
-    let kelvin = 5000 -- Example color temperature
-    let whitePoint = whitePointFromKelvin kelvin
 
     putStrLn "Original Color:"
     printMatrix originalColor
