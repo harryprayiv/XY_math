@@ -14,6 +14,10 @@ White Point:
 x: 0.345
 y: 0.352
 
+Calculated Polynomial White Point:
+x: 0.34462620406230976
+y: 0.3527845495444095
+
 Desaturation Factor (alpha): 0.75
 
 Scaled Original Color:
@@ -25,8 +29,8 @@ x: 8.625e-2
 y: 8.8e-2
 
 Desaturated Color:
-x: 0.49125
-y: 0.35949999999999993```
+x: 0.4911565510155775
+y: 0.35969613738610234```
 
 However, chromaCalc gives me the following answer:
 ```
