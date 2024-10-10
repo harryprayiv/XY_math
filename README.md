@@ -24,13 +24,13 @@ Scaled White Point:
 x: 8.625e-2
 y: 8.8e-2
 
-Desaturated Color:
+Polynomal Fit Desaturated Color:
 x: 0.49125
 y: 0.35949999999999993
 
 However, chromaCalc gives me the following answer:
 
-Desaturated Color:
+ChromaCalc desaturated Color:
 x: 0.493
 y: 0.359
 ```
