@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+module XYZ where
 
 import Data.Matrix (Matrix, fromList, getElem, elementwise, nrows, ncols, transpose, multStd, identity)
 import Data.List (foldl')
@@ -117,25 +117,3 @@ printMatrix mat = do
     putStrLn $ "x: " ++ show (getElem 1 1 mat)
     putStrLn $ "y: " ++ show (getElem 2 1 mat)
 
-main :: IO ()
-main = do
-    let kelvin = 5000 -- Example color temperature
-    let whitePoint = whitePointFromKelvin kelvin
-
-    putStrLn $ "White Point for " ++ show kelvin ++ "K:"
-    printMatrix whitePoint
-
-    -- Define the original color (for desaturation example)
-    let x = 0.54
-    let y = 0.362
-    let originalColor = fromList 2 1 [x, y]
-
-    -- Define desaturation factor
-    let alpha = 0.75 -- 25% desaturation
-
-    putStrLn "\nOriginal Color:"
-    printMatrix originalColor
-
-    let desaturatedColor = desaturate alpha originalColor whitePoint
-    putStrLn "\nDesaturated Color:"
-    printMatrix desaturatedColor

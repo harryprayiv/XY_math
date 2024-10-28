@@ -1,145 +1,89 @@
 {
-  description = "xy_calc Hix/Pix/Plutus dApp DevEnv";
+  description = "budview";
 
   inputs = {
-    
-    iogx = {
-      url = "github:input-output-hk/iogx";
-      inputs.hackage.follows = "hackage";
-      inputs.CHaP.follows = "CHaP";
-      inputs.haskell-nix.follows = "haskellNix";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
+    purescript-overlay = {
+      url = "github:harryprayiv/purescript-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nixpkgs.follows = "haskellNix/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-
-    iohkNix = {
-      url = "github:input-output-hk/iohk-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    hackage = {
-      url = "github:input-output-hk/hackage.nix";
-      flake = false;
-    };
-
-    haskellNix = {
-      url = "github:input-output-hk/haskell.nix/1c329acdaac3d5a600bcaa86b1806414ccd48db6";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.hackage.follows = "hackage";
-    };
-
-    CHaP = {
-      url = "github:IntersectMBO/cardano-haskell-packages?rev=35d5d7f7e7cfed87901623262ceea848239fa7f8";
-      flake = false;
-    };
-
-    plutus.url = "github:IntersectMBO/plutus";
-
-    styleguide.url = "github:cardanonix/styleguide";
+    flake-compat.url = "github:edolstra/flake-compat";
+    flake-compat.flake = false;
   };
 
-outputs = { self, nixpkgs, flake-utils, haskellNix, iohkNix, CHaP, plutus, styleguide, ... }:
-  let
-  
-    overlays = [
-      haskellNix.overlay
-      iohkNix.overlays.crypto
-      (final: prev: {
-        dork-manager = final.haskell-nix.project' {
-          src = ./src;
-          compiler-nix-name = "ghc928";
-          shell.tools = {
-            cabal = "latest";
-            hlint = "latest";
-            haskell-language-server = "latest";
-          };
-        };
-      })
+  outputs = { self, nixpkgs, purescript-overlay, ... }: let
+    name = "budview";
+    supportedSystems = [
+      "aarch64-darwin"
+      "x86_64-darwin"
+      "x86_64-linux"
     ];
-    back_EndResults = flake-utils.lib.eachSystem ["x86_64-linux" "x86_64-darwin"] (
-      system: let
-        pkgs = import nixpkgs {
-          inherit system overlays;
-          inherit (haskellNix) config;
-        };
-        inherit styleguide;
-        hixProject = pkgs.haskell-nix.hix.project {
-          src = ./.;
-          evalSystem = system;
-          inputMap = {"https://input-output-hk.github.io/cardano-haskell-packages" = CHaP;};
-          modules = [
-            (_: {
-              packages.cardano-crypto-praos.components.library.pkgconfig = pkgs.lib.mkForce [pkgs.libsodium-vrf];
-              packages.cardano-crypto-class.components.library.pkgconfig = pkgs.lib.mkForce [pkgs.libsodium-vrf pkgs.secp256k1];
-            })
-          ];
-        };
-        hixFlake = hixProject.flake {};
-      in {
-        apps = hixFlake.apps;
-        checks = hixFlake.checks;
-        # checks.format = styleguide.lib.${system}.mkCheck self; # these are for CI but they depend on ‘terraform-1.6.0’
-        # formatter = styleguide.lib.${system}.mkFormatter self; # these are for CI but they depend on ‘terraform-1.6.0’
-        packages = hixFlake.packages;
 
-        legacyPackages = pkgs;
-
-        devShell = pkgs.mkShell {
-          name = "xy-math";
-          inputsFrom = [hixFlake.devShell];
-          buildInputs = [
-            (pkgs.haskellPackages.ghcWithPackages (hsPkgs: with hsPkgs; [
-              # Assuming dork-manager is a package within your project
-              # generators
-              # haskell-language-server
-              # hoogle
-              # fourmolu
-            ]))
-            pkgs.zlib
-          ];
-          packages = with pkgs; [
-            haskellPackages.fourmolu
-            zlib
-            nix-tree
-            # hackage-mirror
-            cabal-install
-          ];
-          shellHook = ''
-            # Your existing shellHook here...
-          '';
-        };
-      }
-    );
-  in
-    back_EndResults
-    // {
-      # apps = back_EndResults.apps // oci_ImageResult.apps;
-      # checks = back_EndResults.checks // oci_ImageResult.checks;
-      # packages = back_EndResults.packages;
-      # legacyPackages = back_EndResults.legacyPackages;
-      devShell = back_EndResults.devShell;
-    };
-  nixConfig = {
-    extra-experimental-features = ["nix-command flakes" "ca-derivations"];
-    allow-import-from-derivation = "true";
-    # This sets the flake to use nix cache.
-    # Nix should ask for permission before using it,
-    # but remove it here if you do not want it to.
-    extra-substituters = [
-      "https://klarkc.cachix.org?priority=99"
-      "https://cache.iog.io"
-      "https://cache.zw3rk.com"
-      "https://cache.nixos.org"
-      "https://hercules-ci.cachix.org"
-    ];
-    extra-trusted-public-keys = [
-      "klarkc.cachix.org-1:R+z+m4Cq0hMgfZ7AQ42WRpGuHJumLLx3k0XhwpNFq9U="
-      "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
-      "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "hercules-ci.cachix.org-1:ZZeDl9Va+xe9j+KqdzoBZMFJHVQ42Uu/c/1/KMC5Lw0="
-    ];
+    forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
+  in {
+    devShell = forAllSystems (system: let
+      overlays = [
+        purescript-overlay.overlays.default
+      ];
+      pkgs = import nixpkgs { inherit system overlays; };
+      vite = pkgs.writeShellApplication {
+        name = "vite";
+        runtimeInputs = with pkgs; [ nodejs-slim ];
+        text = "npx vite --open";
+      };
+      concurrent = pkgs.writeShellApplication {
+        name = "concurrent";
+        runtimeInputs = with pkgs; [ concurrently ];
+        text = ''
+          concurrently\
+            --color "auto"\
+            --prefix "[{command}]"\
+            --handle-input\
+            --restart-tries 10\
+            "$@"
+        '';
+      };
+      spago-watch = pkgs.writeShellApplication {
+        name = "spago-watch";
+        runtimeInputs = with pkgs; [ entr spago-unstable ];
+        text = ''find {src,test} | entr -s "spago $*" '';
+      };
+      dev = pkgs.writeShellApplication {
+        name = "dev";
+        runtimeInputs = with pkgs; [
+          nodejs-slim
+          spago-watch
+          vite
+          concurrent
+        ];
+        text = ''
+          # npm install &&
+          concurrent "spago-watch build" vite
+        '';
+      };
+    in
+      pkgs.mkShell {
+        inherit name;
+        shellHook = ''
+          echo "Available commands: dev"
+        '';
+        buildInputs = [
+            pkgs.esbuild
+            pkgs.nodejs_20
+            pkgs.nixpkgs-fmt
+            pkgs.purs
+            pkgs.purs-tidy
+            pkgs.purs-backend-es
+            pkgs.purescript-language-server
+            pkgs.spago-unstable
+            vite
+            dev
+            ]
+            ++ (pkgs.lib.optionals (system == "aarch64-darwin")
+              (with pkgs.darwin.apple_sdk.frameworks; [
+                Cocoa
+                CoreServices
+              ]));
+      });
   };
 }
