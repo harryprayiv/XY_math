@@ -1,5 +1,5 @@
 package:
-  name: xy_math
+  name: xy-math
   dependencies:
     - aff
     - affjax
@@ -14,6 +14,7 @@ package:
     - either
     - fetch
     - fetch-yoga-json
+    - linalg
     - lists
     - matrices
     - maybe

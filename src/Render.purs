@@ -1,4 +1,4 @@
--- module Render where
+module Render where
 
 -- import Prelude
 
